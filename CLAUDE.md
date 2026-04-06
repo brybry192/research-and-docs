@@ -12,16 +12,32 @@ A personal knowledge base of technical research, architecture deep-dives, and re
 projects/              # All research organized by project (self-contained)
 templates/             # Reusable document templates
 checklists/            # Reusable review checklists
+tools/                 # Verification scripts
 journal.md             # Running session log
 ```
+
+## Mandatory: Verify Before Committing
+
+AI research output will confidently present stale or fabricated information as current fact. This has already happened in this repo — see the [lib/pq incident](projects/postgres-drivers/README.md#what-actually-happened-with-libpqs-status).
+
+**Before committing any research document, you MUST:**
+
+1. **Run `./tools/verify-claims.sh`** against the document to check GitHub-based claims
+2. **Fetch and read the actual README** for any project whose status you describe (maintenance mode, deprecated, actively maintained)
+3. **Verify quoted text** exists in the source — do not trust sub-agent output that includes quotes
+4. **Check release dates and versions** against the actual releases page
+5. **Never use sub-agent research output without verification** — sub-agents will fabricate specific quotes, commit hashes, and dates that look real but are not
+
+If you cannot verify a claim, either omit it or explicitly mark it as unverified.
 
 ## Workflow
 
 1. Each research effort gets its own directory under `projects/<project-name>/`
 2. Start documents from the appropriate template in `templates/`
 3. Use the matching checklist from `checklists/` during research
-4. Log each session in `journal.md` (date, outputs, open threads)
-5. Commit messages should reference source repos and research date
+4. **Verify all factual claims** — run `./tools/verify-claims.sh` and manually check high-risk claims
+5. Log each session in `journal.md` (date, outputs, open threads)
+6. Commit messages should reference source repos and research date
 
 ## Document Conventions
 
