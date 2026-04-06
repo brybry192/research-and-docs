@@ -32,29 +32,44 @@ A comprehensive analysis of Go's PostgreSQL driver, ORM, and query tool landscap
 
 ## 1. lib/pq
 
-**GitHub:** [github.com/lib/pq](https://github.com/lib/pq) | **Stars:** ~9,845 | **Latest:** v1.12.3 (Apr 2026)
+**GitHub:** [github.com/lib/pq](https://github.com/lib/pq) | **Stars:** ~9,845 | **Latest:** v1.12.3 (Apr 3, 2026) | **License:** MIT
 
-### Maintenance Status
+### Current Status
 
-Officially in maintenance mode. The README states:
+**Actively maintained.** lib/pq has had a burst of development in 2026 — 7 releases since January 2026 (v1.11.0 through v1.12.3), after a long gap where the last release was v1.10.9 in April 2023. The README contains no deprecation notice and no recommendation to use an alternative driver.
 
-> "This package is currently in maintenance mode, which means: It generally does not accept new features. It does accept bug fixes and version compatibility changes provided by the community. Maintainers usually do not resolve reported issues."
+Recent additions include a `pq.Config` struct, `pq.NewConnectorConfig()`, CockroachDB testing, error handling improvements (`ErrorWithDetail()`), and datestyle startup parameter support. This is not a project in maintenance mode — it is actively shipping features.
 
-> "For users that require new features or reliable resolution of reported bugs, we recommend using pgx which is under active development."
+**Release timeline (verified via [GitHub releases](https://github.com/lib/pq/releases)):**
 
-This notice was added April 2020 (commit c782d9f). Bug-fix releases continue, but no new features.
+| Version | Date |
+|---|---|
+| v1.12.3 | Apr 3, 2026 |
+| v1.12.2 | Apr 2, 2026 |
+| v1.12.1 | Mar 30, 2026 |
+| v1.12.0 | Mar 18, 2026 |
+| v1.11.2 | Feb 10, 2026 |
+| v1.11.1 | Jan 29, 2026 |
+| v1.11.0 | Jan 28, 2026 |
+| v1.10.9 | Apr 26, 2023 |
 
-### Key Limitations
+### Capabilities
+
+lib/pq is a full-featured `database/sql` driver with support for: SCRAM-SHA256/MD5/password auth, Kerberos (via separate module), COPY FROM STDIN, LISTEN/NOTIFY, pgpass files, SSL/TLS, and notice handlers.
+
+### Limitations Compared to pgx
+
+These are real technical gaps — not signs of abandonment, but differences in design scope:
 
 | Limitation | Impact |
 |---|---|
 | No `DialFunc` | Cannot inject custom dialers for SSH tunnels, SOCKS proxies, Cloud SQL connectors, or IAM auth |
-| Global driver registry | `init()` registration — one config per driver name per process |
+| Global driver registry | `init()` registration — one config per driver name per process. The new `pq.NewConnectorConfig()` mitigates this for some use cases |
 | Text-only protocol | No binary encoding; more parsing overhead, slower throughput |
 | No statement caching | Full Parse-Bind-Execute cycle on every parameterized query |
 | No built-in pooling | Relies entirely on `database/sql`'s pool (no hooks, health checks) |
 | No batch queries | Cannot send multiple queries in a single round trip |
-| Limited type support | Fewer native PostgreSQL type mappings than pgx |
+| Fewer native types | pgx supports ~70 PostgreSQL types natively |
 
 ---
 
@@ -251,16 +266,31 @@ Workaround for dynamic queries: CASE statements with boolean flags, or multiple 
 
 ### Option Comparison
 
+Both lib/pq and pgx are actively maintained. The choice depends on what features you need, not on maintenance status.
+
 | Stack | Best For | Performance | Migration Cost | SQL Control | Type Safety |
 |---|---|---|---|---|---|
-| **pgx/stdlib + sqlx** | Migrating from lib/pq | Good (10-20% over lib/pq) | Lowest | Full (raw SQL) | Runtime only |
-| **pgx native** | Performance-critical services | Best (50-100% over lib/pq) | Medium | Full | Runtime only |
+| **lib/pq + sqlx** | Existing services, simplicity | Baseline | None | Full (raw SQL) | Runtime only |
+| **pgx/stdlib + sqlx** | Need pgx features via database/sql | Good (binary protocol, stmt cache) | Low | Full (raw SQL) | Runtime only |
+| **pgx native** | Performance-critical, cloud-native | Best (DialFunc, batch, COPY) | Medium | Full | Runtime only |
 | **sqlc + pgx** | New services, correctness | Best | Medium | Full | Compile-time |
-| **GORM** | Internal tools, prototyping | Lowest (30-50% overhead) | Low | Limited | Runtime only |
+| **GORM** | Internal tools, prototyping | Lowest (reflection overhead) | Low | Limited | Runtime only |
 
-### Recommended Stack: pgx/v5 + sqlc (new services)
+### When to Migrate from lib/pq to pgx
 
-For an organization standardizing across hundreds of Go services:
+lib/pq is a solid driver. You do **not** need to migrate unless you need features it does not provide:
+
+- **DialFunc** — custom dialers for Cloud SQL, SSH tunnels, IAM auth, connection timing
+- **Per-connection config** — attach configuration without the global driver registry
+- **Batch queries** — send multiple queries in one round trip
+- **COPY protocol** — bulk data loading
+- **Binary wire format** — reduced parsing overhead for high-throughput services
+
+If lib/pq does what you need, there is no urgency to switch.
+
+### Recommended Stack for New Services: pgx/v5 + sqlc
+
+For an organization building **new** Go services with PostgreSQL:
 
 - **pgx native** for the driver layer (performance, hooks, cloud-native features)
 - **sqlc** for query development (type safety, compile-time validation, CI enforcement)
@@ -268,10 +298,10 @@ For an organization standardizing across hundreds of Go services:
 - **pgx/v5/stdlib** as bridge for services needing `database/sql` compatibility
 - **Goose or Atlas** for schema migrations (sqlc does not manage schema)
 
-### Migration Path from lib/pq
+### Migration Path (When You Do Need pgx)
 
-**Phase 1 — Low risk, immediate:**
-Swap `_ "github.com/lib/pq"` for `_ "github.com/jackc/pgx/v5/stdlib"`. Change driver name. All existing code works. Immediate benefit: binary protocol, statement caching.
+**Phase 1 — Low risk:**
+Swap `_ "github.com/lib/pq"` for `_ "github.com/jackc/pgx/v5/stdlib"`. Change driver name. All existing `database/sql` and sqlx code continues to work.
 
 **Phase 2 — Medium effort:**
 For services needing DialFunc/hooks: configure `pgxpool.Config` and use `stdlib.OpenDBFromPool`. Migrate connection strings to `pgx.ParseConfig`.
@@ -288,7 +318,8 @@ New services start with pgx native + sqlc as default. Existing services migrate 
 
 | Source | URL |
 |---|---|
-| lib/pq README | https://github.com/lib/pq#status |
+| lib/pq GitHub | https://github.com/lib/pq |
+| lib/pq releases | https://github.com/lib/pq/releases |
 | pgx GitHub | https://github.com/jackc/pgx |
 | pgx/v5/stdlib docs | https://pkg.go.dev/github.com/jackc/pgx/v5/stdlib |
 | pgx vs lib/pq benchmarks | https://devandchill.com/posts/2020/05/go-lib/pq-or-pgx-which-performs-better/ |

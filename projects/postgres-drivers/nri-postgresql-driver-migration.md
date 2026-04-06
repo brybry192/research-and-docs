@@ -23,15 +23,9 @@ This section is written to preempt reviewer concerns about swapping a core depen
 
 ### Why Migrate?
 
-**The old driver says so itself.** The [lib/pq README](https://github.com/lib/pq#status) states:
+**Note on lib/pq status:** lib/pq is actively maintained (7 releases in 2026, including new features like `pq.Config`). This migration is **not** because lib/pq is abandoned — it is because the observability features in this PR require specific capabilities that lib/pq does not provide. See the [lib/pq releases page](https://github.com/lib/pq/releases) for current activity.
 
-> "This package is currently in maintenance mode, which means: It generally does not accept new features. It does accept bug fixes and version compatibility changes provided by the community. Maintainers usually do not resolve reported issues. Community members are encouraged to help each other with reported issues."
-
-> "For users that require new features or reliable resolution of reported bugs, we recommend using pgx which is under active development."
-
-This notice was added in April 2020 (commit c782d9f). lib/pq's last release is v1.12.3 — bug fixes only.
-
-**Technical necessity.** The observability features in this PR require capabilities that lib/pq does not and will never provide:
+**Technical necessity.** The observability features in this PR require capabilities that lib/pq does not provide:
 
 - **DialFunc:** lib/pq has no `DialFunc` hook. Connection timing (DNS, TCP, TLS phase measurement) requires injecting a custom dialer into the connection lifecycle. pgx exposes `pgconn.Config.DialFunc` for exactly this purpose.
 - **Config model:** lib/pq uses Go's global `database/sql` driver registry via `init()`. There is no way to attach per-connection configuration (TLS callbacks, timing hooks) without a global singleton. pgx's `pgx.ConnConfig` holds configuration per connection, eliminating this limitation.
@@ -97,6 +91,7 @@ graph TD
 | Resource | URL |
 |---|---|
 | PR | https://github.com/brybry192/nri-postgresql/pull/1 |
-| lib/pq README (maintenance notice) | https://github.com/lib/pq#status |
+| lib/pq GitHub | https://github.com/lib/pq |
+| lib/pq releases | https://github.com/lib/pq/releases |
 | pgx GitHub | https://github.com/jackc/pgx |
 | pgx/v5/stdlib docs | https://pkg.go.dev/github.com/jackc/pgx/v5/stdlib |

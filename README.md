@@ -4,6 +4,8 @@ A personal knowledge base of technical research, architecture deep-dives, and re
 
 > **Purpose:** Capture and version-control research output so it's searchable, linkable, and buildable-upon across sessions.
 
+> **Warning:** This repo contains AI-assisted research. AI tools will confidently fabricate specific details — quotes, commit hashes, version numbers, maintenance status — that are entirely wrong. We caught one such fabrication in the [postgres-drivers project](projects/postgres-drivers/README.md#what-went-wrong). **Do not cite anything from this repo without independently verifying it against the actual source.** If a claim references a README, release page, or project status, click the link and check it yourself.
+
 ---
 
 ## Table of Contents

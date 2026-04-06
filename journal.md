@@ -23,7 +23,8 @@ Running log of research sessions. One entry per session — date, topic, outputs
   - Go drivers: `projects/postgres-drivers/go-drivers.md` (lib/pq, pgx, sqlx, sqlc, GORM, Bun)
   - Multi-language: `projects/postgres-drivers/multilang-drivers.md` (Java, Ruby, Python)
   - PR review: `projects/postgres-drivers/nri-postgresql-driver-migration.md`
-  - Key finding: lib/pq README officially recommends pgx; sqlc + pgx is the recommended enterprise Go stack
+  - Key finding: pgx migration is driven by technical need (DialFunc, config model), not lib/pq health — lib/pq is actively maintained
+  - **CORRECTION:** initial version falsely claimed lib/pq was in maintenance mode — verified this is wrong, lib/pq shipped 7 releases in 2026
   - Open thread: evaluate sqlc adoption for nri-postgresql metric queries
 
 - **2026-04-06** — Enterprise schema management research
