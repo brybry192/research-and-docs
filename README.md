@@ -24,6 +24,8 @@ All research is organized by project under `projects/`. Each project is self-con
 | Project | Status | Last Updated | Summary |
 |---|---|---|---|
 | [nri-integrations](projects/nri-integrations/) | reviewed | Apr 2026 | Architecture deep-dives of nri-postgresql, nri-mysql, nri-redis + cross-plugin comparison |
+| [postgres-drivers](projects/postgres-drivers/) | reviewed | Apr 2026 | PostgreSQL driver & data access ecosystem across Go, Java, Ruby, Python + nri-postgresql migration review |
+| [schema-management](projects/schema-management/) | reviewed | Apr 2026 | Enterprise schema management — tool comparison, safety layers, blue/green deployments |
 
 ---
 
