@@ -30,6 +30,58 @@ AI research output will confidently present stale or fabricated information as c
 
 If you cannot verify a claim, either omit it or explicitly mark it as unverified.
 
+## Known Hallucination Patterns
+
+These are failure modes observed in this repo. Learn from them.
+
+### Stale-but-once-true claims (most dangerous)
+
+The AI presented lib/pq as "in maintenance mode" with a real commit hash and real date — because a maintenance notice **did** exist from April 2020 through March 2026, but was removed weeks before the research was conducted. This is worse than pure fabrication because: the claim sounds plausible, has real historical evidence, and is echoed across outdated blog posts and StackOverflow answers. The user caught it only because he already knew the project well.
+
+**Defense:** Always fetch the current README and recent releases for any project you describe. Historical information from training data or web searches is not a substitute for checking the actual repo right now.
+
+### Confident specificity as a warning sign
+
+The more specific and quotable a claim looks (exact quotes, commit hashes, precise star counts, specific dates), the more likely it is fabricated or stale. Vague claims are easier to spot-check; precise-sounding claims create false confidence.
+
+**Defense:** Treat high-specificity claims as high-risk. Verify every quoted string, commit hash, and version number against the primary source before including it.
+
+### Sub-agent output passed through without verification
+
+Research sub-agents will return detailed, well-structured output that reads as authoritative. The main agent's instinct is to trust and pass it through. This is how the lib/pq error made it into three documents before being caught.
+
+**Defense:** Never commit sub-agent research output directly. Read it critically, then verify the key claims yourself using `gh api`, `WebFetch`, or direct file reads. If verification is not possible, mark claims as unverified.
+
+### What to do when caught
+
+If the user identifies a factual error:
+1. Investigate the actual source immediately — do not guess or speculate about what happened
+2. Correct every document that contains the error
+3. Document what went wrong and why in the project README (see [postgres-drivers correction notice](projects/postgres-drivers/README.md#what-went-wrong))
+4. Credit the person who caught it — they did the work you should have done
+
+## Verification Tooling
+
+### `./tools/verify-claims.sh <file.md>`
+
+Requires: `gh` (authenticated), `curl`, `jq`. Checks:
+- GitHub repo URLs resolve
+- Maintenance/deprecated claims match actual README content
+- "Actively maintained" claims verified against last push date (180-day threshold)
+- Release versions exist in actual release/tag list
+- Quoted README text exists in the current README
+- Archived repos flagged
+
+Run against **every** research document before committing. See [tools/README.md](tools/README.md) for the full workflow and manual verification guidance.
+
+### High-risk claims that require manual verification
+
+Even after `verify-claims.sh` passes, manually check:
+- Project status claims (maintenance mode, deprecated, actively maintained) — fetch the README yourself
+- Non-GitHub sources (docs sites, blog posts, package registries)
+- Performance benchmark claims (no automated way to verify)
+- "Officially recommends" claims (strong assertion, frequently fabricated)
+
 ## Workflow
 
 1. Each research effort gets its own directory under `projects/<project-name>/`
